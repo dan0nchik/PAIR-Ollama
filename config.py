@@ -55,6 +55,8 @@ FASTCHAT_TEMPLATE_NAMES: dict[Model, str] = {
     Model.vicuna: "vicuna_v1.1",
     Model.llama_2: "llama-2-7b-chat-hf",
     Model.mixtral: "mixtral",
+    Model.llama_2_uncensored: "ollama/llama2-uncensored:latest",
+    Model.tinyllama: "ollama/tinyllama:latest",
 }
 
 API_KEY_NAMES: dict[Model, str] = {
