@@ -19,6 +19,8 @@ class Model(Enum):
     mixtral = "mixtral"
     llama_2 = "llama2"
     llama_2_uncensored = "llama2-uncensored"
+    mixtral_ollama='mixtral:8x7b'
+    llama3 = 'llama3.1:8b'
     tinyllama = "tinyllama"
     gemma_2b = "gemma:2b"
     gemma_7b = "gemma:7b"
@@ -33,11 +35,13 @@ HF_MODEL_NAMES: dict[Model, str] = {
 }
 
 OLLAMA_MODEL_NAMES: dict[Model, str] = {
-    Model.llama_2: "ollama/llama2:latest",
-    Model.llama_2_uncensored: "ollama/llama2-uncensored:latest",
-    Model.tinyllama: "ollama/tinyllama:latest",
+    Model.llama_2: "ollama/llama2",
+    Model.llama_2_uncensored: "ollama/llama2-uncensored",
+    Model.tinyllama: "ollama/tinyllama",
     Model.gemma_2b: "ollama/gemma:2b",
-    Model.gemma_7b: "ollama/gemma:7b"
+    Model.gemma_7b: "ollama/gemma:7b",
+    Model.mixtral_ollama: "ollama/mixtral:8x7b",
+    Model.llama3: "ollama/llama3.1:8b"
 }
 
 TOGETHER_MODEL_NAMES: dict[Model, str] = {
@@ -55,8 +59,10 @@ FASTCHAT_TEMPLATE_NAMES: dict[Model, str] = {
     Model.vicuna: "vicuna_v1.1",
     Model.llama_2: "llama-2-7b-chat-hf",
     Model.mixtral: "mixtral",
-    Model.llama_2_uncensored: "ollama/llama2-uncensored:latest",
-    Model.tinyllama: "ollama/tinyllama:latest",
+    Model.llama_2_uncensored: "ollama/llama2-uncensored",
+    Model.tinyllama: "ollama/tinyllama",
+    Model.mixtral_ollama: "ollama/mixtral:8x7b",
+    Model.llama3: "ollama/llama3.1:8b"
 }
 
 API_KEY_NAMES: dict[Model, str] = {
@@ -93,6 +99,33 @@ LITELLM_TEMPLATES: dict[Model, dict] = {
                 "eos_tokens" :  ["</s>", "[/INST]"]  
             },
     Model.llama_2_uncensored: {"roles":{
+                    "system": {"pre_message": "[INST] <<SYS>>\n", "post_message": "\n<</SYS>>\n\n"},
+                    "user": {"pre_message": "", "post_message": " [/INST]"},
+                    "assistant": {"pre_message": "", "post_message": ""},
+                },
+                "post_message" : " </s><s>",
+                "initial_prompt_value" : "",
+                "eos_tokens" :  ["</s>", "[/INST]"]  
+            },
+    Model.mixtral_ollama: {"roles":{
+                    "system": {
+                        "pre_message": "[INST] ",
+                        "post_message": " [/INST]"
+                    },
+                    "user": { 
+                        "pre_message": "[INST] ",
+                        "post_message": " [/INST]"
+                    }, 
+                    "assistant": {
+                        "pre_message": " ",
+                        "post_message": "",
+                    }
+                },
+                "post_message": "</s>",
+                "initial_prompt_value" : "<s>",
+                "eos_tokens": ["</s>", "[/INST]"]
+    },
+    Model.llama3: {"roles":{
                     "system": {"pre_message": "[INST] <<SYS>>\n", "post_message": "\n<</SYS>>\n\n"},
                     "user": {"pre_message": "", "post_message": " [/INST]"},
                     "assistant": {"pre_message": "", "post_message": ""},

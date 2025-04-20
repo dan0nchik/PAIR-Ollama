@@ -22,7 +22,7 @@ def load_attack_and_target_models(args):
     
     return attackLM, targetLM
 
-def load_indiv_model(model_name, local = False, use_jailbreakbench=False, use_ollama=False):
+def load_indiv_model(model_name, local = False, use_jailbreakbench=False, use_ollama=True):
     use_jailbreakbench = False
     if use_jailbreakbench: 
         if local:
@@ -65,7 +65,8 @@ class AttackLM():
         self.evaluate_locally = evaluate_locally
         self.model = load_indiv_model(model_name, 
                                       local = evaluate_locally, 
-                                      use_jailbreakbench=False # Cannot use JBB as attacker
+                                      use_jailbreakbench=False,
+                                      use_ollama=True # Cannot use JBB as attacker
                                       )
         self.initialize_output = self.model.use_open_source_model
         self.template = FASTCHAT_TEMPLATE_NAMES[self.model_name]
@@ -166,7 +167,7 @@ class TargetLM():
             phase: str,
             evaluate_locally: bool = False,
             use_jailbreakbench: bool = True,
-            use_ollama: bool = False
+            use_ollama: bool = True
             ):
         
         self.model_name = model_name
@@ -180,7 +181,7 @@ class TargetLM():
         self.temperature = TARGET_TEMP
         self.top_p = TARGET_TOP_P
 
-        self.model = load_indiv_model(model_name, evaluate_locally, use_jailbreakbench, use_ollama=self.use_ollama)            
+        self.model = load_indiv_model(model_name, evaluate_locally, use_jailbreakbench, use_ollama=True)            
         self.category = category
         self.template = ""
 
