@@ -1,20 +1,32 @@
-import os 
+import os
 import litellm
 import vllm
-from config import TOGETHER_MODEL_NAMES, LITELLM_TEMPLATES, API_KEY_NAMES, Model, HF_MODEL_NAMES, MODEL_NAMES, OLLAMA_MODEL_NAMES
+from config import (
+    TOGETHER_MODEL_NAMES,
+    LITELLM_TEMPLATES,
+    API_KEY_NAMES,
+    Model,
+    HF_MODEL_NAMES,
+    MODEL_NAMES,
+    OLLAMA_MODEL_NAMES,
+)
 from loggers import logger
 from common import get_api_key
 
-class LanguageModel():
+
+class LanguageModel:
     def __init__(self, model_name):
         self.model_name = Model(model_name)
-    
-    def batched_generate(self, prompts_list: list, max_n_tokens: int, temperature: float):
+
+    def batched_generate(
+        self, prompts_list: list, max_n_tokens: int, temperature: float
+    ):
         """
         Generates responses for a batch of prompts using a language model.
         """
         raise NotImplementedError
-    
+
+
 class APILiteLLM(LanguageModel):
     API_RETRY_SLEEP = 10
     API_ERROR_OUTPUT = "ERROR: API CALL FAILED."
@@ -27,10 +39,10 @@ class APILiteLLM(LanguageModel):
         super().__init__(model_name)
         self.api_key = get_api_key(self.model_name, use_ollama=use_ollama)
         self.litellm_model_name = self.get_litellm_model_name(self.model_name)
-        litellm.drop_params=True
+        litellm.drop_params = True
         self.set_eos_tokens(self.model_name)
         self.use_ollama = use_ollama
-        
+
     def get_litellm_model_name(self, model_name):
         if model_name in OLLAMA_MODEL_NAMES:
             litellm_name = OLLAMA_MODEL_NAMES[model_name]
@@ -39,16 +51,16 @@ class APILiteLLM(LanguageModel):
             litellm_name = TOGETHER_MODEL_NAMES[model_name]
             self.use_open_source_model = True
         else:
-            self.use_open_source_model =  False
-            #if self.use_open_source_model:
-                # Output warning, there should be a TogetherAI model name
-                #logger.warning(f"Warning: No TogetherAI model name for {model_name}.")
-            litellm_name = model_name.value 
+            self.use_open_source_model = False
+            # if self.use_open_source_model:
+            # Output warning, there should be a TogetherAI model name
+            # logger.warning(f"Warning: No TogetherAI model name for {model_name}.")
+            litellm_name = model_name.value
         return litellm_name
-    
+
     def set_eos_tokens(self, model_name):
         if self.use_open_source_model:
-            self.eos_tokens = LITELLM_TEMPLATES[model_name]["eos_tokens"]     
+            self.eos_tokens = LITELLM_TEMPLATES[model_name]["eos_tokens"]
         else:
             self.eos_tokens = []
 
@@ -56,31 +68,34 @@ class APILiteLLM(LanguageModel):
         # We manually add the post_message later if we want to seed the model response
         if self.model_name in LITELLM_TEMPLATES:
             litellm.register_prompt_template(
-                initial_prompt_value=LITELLM_TEMPLATES[self.model_name]["initial_prompt_value"],
+                initial_prompt_value=LITELLM_TEMPLATES[self.model_name][
+                    "initial_prompt_value"
+                ],
                 model=self.litellm_model_name,
-                roles=LITELLM_TEMPLATES[self.model_name]["roles"]
+                roles=LITELLM_TEMPLATES[self.model_name]["roles"],
             )
             self.post_message = LITELLM_TEMPLATES[self.model_name]["post_message"]
         else:
             self.post_message = ""
-        
-    
-    
-    def batched_generate(self, convs_list: list[list[dict]], 
-                         max_n_tokens: int, 
-                         temperature: float, 
-                         top_p: float,
-                         extra_eos_tokens: list[str] = None) -> list[str]: 
-        
-        eos_tokens = self.eos_tokens 
+
+    def batched_generate(
+        self,
+        convs_list: list[list[dict]],
+        max_n_tokens: int,
+        temperature: float,
+        top_p: float,
+        extra_eos_tokens: list[str] = None,
+    ) -> list[str]:
+
+        eos_tokens = self.eos_tokens
 
         if extra_eos_tokens:
             eos_tokens.extend(extra_eos_tokens)
         if self.use_open_source_model:
             self._update_prompt_template()
-        
+        print(self.litellm_model_name, self.api_key)
         outputs = litellm.batch_completion(
-            model=self.litellm_model_name, 
+            model=self.litellm_model_name,
             messages=convs_list,
             api_base="http://localhost:11434" if self.use_ollama else None,
             api_key=self.api_key if not self.use_ollama else None,
@@ -91,13 +106,14 @@ class APILiteLLM(LanguageModel):
             seed=0,
             stop=eos_tokens,
         )
-        
+
         responses = [output["choices"][0]["message"].content for output in outputs]
 
         return responses
 
+
 # class LocalvLLM(LanguageModel):
-    
+
 #     def __init__(self, model_name: str):
 #         """Initializes the LLMHuggingFace with the specified model name."""
 #         super().__init__(model_name)
@@ -141,10 +157,3 @@ class APILiteLLM(LanguageModel):
 #             # Add the system prompt for Llama as FastChat does not include it
 #             template.system_message = """You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
 #         return template
-    
-
-
-
-
-
-
