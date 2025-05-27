@@ -63,6 +63,12 @@ def main(args):
             extracted_attack_list = attackLM.get_attack(
                 convs_list, processed_response_list
             )
+            if not extracted_attack_list:
+                logger.warning(
+                    "No valid adversarial prompts generated. Skipping this iteration."
+                )
+                wandb_logger.log(iteration, [], [], [])
+                continue
             logger.debug("Finished getting adversarial prompts.")
 
             # Extract prompts and improvements
