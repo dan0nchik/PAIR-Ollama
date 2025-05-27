@@ -148,7 +148,7 @@ class AttackLM:
                 break
 
         if any([output is None for output in valid_outputs]):
-            return None
+            return None, None
         return valid_outputs, new_adv_prompts
 
     def get_attack(self, convs_list, prompts_list):
@@ -175,7 +175,7 @@ class AttackLM:
         valid_outputs, new_adv_prompts = self._generate_attack(
             processed_convs_list, init_message
         )
-        if not valid_outputs:
+        if not valid_outputs and not new_adv_prompts:
             return None
 
         for jailbreak_prompt, conv in zip(new_adv_prompts, convs_list):
